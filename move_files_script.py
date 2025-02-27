@@ -2,11 +2,15 @@ import os
 import shutil
 import sys
 
+PATH = '../data'
 
 def move_files(txt, destination_dir):
     with open(txt, "r") as f:
         for line in f:
-            file_path = line.strip()
+            # ignore .htmls with "tag" for Ukrinform dataset
+            if 'tag' in line:
+                continue
+            file_path = os.path.join(PATH, line.strip())
             if os.path.exists(file_path) and file_path.endswith(".html"):
                 shutil.copy(file_path, destination_dir)
 
@@ -19,6 +23,9 @@ if __name__ == '__main__':
 
     if not txt.endswith('.txt'):
         raise ValueError('The first argument should be a txt file!')
+
+    txt = os.path.join(PATH, txt)
+    to_dir = os.path.join(PATH, to_dir)
 
     os.makedirs(to_dir, exist_ok=True)
     move_files(txt, to_dir)

@@ -13,6 +13,7 @@ OUT_PATH = os.path.join(PATH, 'parsed_data')
 DATA2FUNC = {
     'ukrinform': ps.extract_from_ukrinform,
     'sputnik': ps.extract_from_sputnik,
+    'nv': ps.extract_from_nv,
 }
 
 

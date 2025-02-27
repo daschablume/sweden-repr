@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 from bs4 import BeautifulSoup
 
@@ -140,6 +141,41 @@ def extract_from_ukrinform_interview(file_path):
     return article_info
 
 
-#extract_from_ukrinform(path)
+# TODO: I can't make work shell script for finding "Sweden"
+def extract_from_nv(file_path):
+    with open(file_path, encoding='utf-8') as fp:
+        html = fp.read()
+    soup = BeautifulSoup(html, "html.parser")
+    keywords = [kw.get_text(strip=True) for kw in soup.find_all("a", class_="tag")]
+    abstract = soup.find('meta', {'property': 'og:description'})['content'].strip()
+    
+    # Find the JSON-LD script tag
+    script_tag = soup.find('script', type='application/ld+json')
+    if not script_tag:
+        return 
+    json_data = json.loads(script_tag.string)
+    
+    for item in json_data:
+        if item.get('@type') == 'NewsArticle':
+            article_text = item.get('articleBody')
+            if not article_text:
+                return
+            author = item['author']['name'] if item.get('author') else None
+            date = str(item['datePublished']).split()[0] #'2025-02-16T08:23:00 EET'
+            parsed_date = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S').strftime(UNIFIED_PARSE_DATE)
+            title = item.get('headline')
+            break
+    
+    article_info = {
+        "date_published": parsed_date,
+        "genre": 'news',
+        "author": author,
+        "keywords": keywords,
+        "title": title,
+        "abstract": abstract,
+        "article_body": article_text,
+        "file_path": file_path,
+    }
 
+    return article_info
 

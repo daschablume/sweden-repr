@@ -8,10 +8,10 @@ def move_files(txt, destination_dir):
     with open(txt, "r") as f:
         for line in f:
             # ignore .htmls with "tag" for Ukrinform dataset
-            if 'tag' in line:
+            if 'tag' in line.lower():
                 continue
             file_path = os.path.join(PATH, line.strip())
-            if os.path.exists(file_path) and file_path.endswith(".html"):
+            if os.path.exists(file_path) and (file_path.endswith(".html") or file_path.endswith(".HTM")):
                 shutil.copy(file_path, destination_dir)
 
 

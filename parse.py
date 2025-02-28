@@ -141,12 +141,15 @@ def extract_from_ukrinform_interview(file_path):
     return article_info
 
 
-# TODO: I can't make work shell script for finding "Sweden"
 def extract_from_nv(file_path):
     with open(file_path, encoding='utf-8') as fp:
         html = fp.read()
     soup = BeautifulSoup(html, "html.parser")
     keywords = [kw.get_text(strip=True) for kw in soup.find_all("a", class_="tag")]
+    # from my experience, if there are no keywords, then it's an html with overview of other articles
+    # HOLD ON HERE
+    if not keywords:
+        return
     abstract = soup.find('meta', {'property': 'og:description'})['content'].strip()
     
     # Find the JSON-LD script tag
@@ -155,20 +158,38 @@ def extract_from_nv(file_path):
         return 
     json_data = json.loads(script_tag.string)
     
-    for item in json_data:
-        if item.get('@type') == 'NewsArticle':
-            article_text = item.get('articleBody')
-            if not article_text:
-                return
-            author = item['author']['name'] if item.get('author') else None
-            date = str(item['datePublished']).split()[0] #'2025-02-16T08:23:00 EET'
-            parsed_date = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S').strftime(UNIFIED_PARSE_DATE)
-            title = item.get('headline')
-            break
+    if isinstance(json_data, dict):
+        body = soup.find('div', class_="article-content-body")
+        if not body:
+            return
+        text = [p.get_text(strip=True) for p in body.find_all("p") if p.get_text(strip=True)]
+        article_text = ' '.join(text)
+        author = soup.find("p", class_="opinion_author_name")
+        if not author:
+            author = soup.find("a", class_="opinion_author_name")
+        author = author.get_text(strip=True) # if author else None
+        genre = "opinion"  # I have literally 1 datapoint to justify this decision
+        date = json_data['datePublished']  # '2025-02-25 12:14:00'
+        parsed_date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S').strftime(UNIFIED_PARSE_DATE)
+        item = json_data
+
+    else:
+        genre = "news"  # TODO: make a better analysis
+        for item in json_data:
+            if item.get('@type') == 'NewsArticle':
+                article_text = item.get('articleBody')
+                if not article_text:
+                    return
+                author = item['author']['name'] if item.get('author') else None
+                date = str(item['datePublished']).split()[0]  #'2025-02-16T08:23:00 EET'
+                parsed_date = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S').strftime(UNIFIED_PARSE_DATE)
+                break
+    
+    title = item.get('headline')
     
     article_info = {
         "date_published": parsed_date,
-        "genre": 'news',
+        "genre": genre,
         "author": author,
         "keywords": keywords,
         "title": title,
@@ -178,4 +199,13 @@ def extract_from_nv(file_path):
     }
 
     return article_info
+
+
+if __name__ == '__main__':
+    file_path = '../data/swe-nv/YAK_INDEKS_CHERVONOJI_POMADI_PR.HTM'
+    print(extract_from_nv(file_path))
+    file_path = '../data/swe-nv/GODOVSHCHINA_VTORZHENIYA_ROSSII.HTM'
+    print(extract_from_nv(file_path))
+    file_path = '../data/swe-nv/EXPERTS4658.HTM'
+    print(extract_from_nv(file_path))
 

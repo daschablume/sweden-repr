@@ -4,14 +4,23 @@ import sys
 
 PATH = '../data'
 
+
 def move_files(txt, destination_dir):
+    '''
+    This script is problematic for cases when the file name is like "SOME_NAME/INDEX.HTM",
+    because then there are several files which end with "INDEX" and they will be overwritten,
+    ending up with only one file in the destination directory instead of several.
+    Don't use / use cautiously.
+    (This is because of `shutil.copy` line)
+    '''
     with open(txt, "r") as f:
         for line in f:
             # ignore .htmls with "tag" for Ukrinform dataset
             if 'tag' in line.lower():
+                print(f"Skipping {line}")
                 continue
-            file_path = os.path.join(PATH, line.strip())
-            if os.path.exists(file_path) and (file_path.endswith(".html") or file_path.endswith(".HTM")):
+            file_path = os.path.join(PATH, line.strip())            
+            if os.path.exists(file_path) and file_path.lower().endswith((".html", ".htm")):
                 shutil.copy(file_path, destination_dir)
 
 

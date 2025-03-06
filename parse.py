@@ -1,9 +1,18 @@
 from datetime import datetime
 import json
+import re
 
 from bs4 import BeautifulSoup
 
 UNIFIED_PARSE_DATE = '%Y-%m-%d'
+TEXT_RE = re.compile(r'<(p|strong)>([^<].*)<\/(p|strong)>')
+TAG_RE = re.compile(r'(<a.[^>]*>|<\/\w+>)')
+
+UKR2ENG = {
+    "Січня": "January", "Лютого": "February", "Березня": "March", "Квітня": "April",
+    "Травня": "May", "Червня": "June", "Липня": "July", "Серпня": "August",
+    "Вересня": "September", "Жовтня": "October", "Листопада": "November", "Грудня": "December"
+}
 
 
 def extract_from_sputnik(file_path):
@@ -201,11 +210,95 @@ def extract_from_nv(file_path):
     return article_info
 
 
-if __name__ == '__main__':
-    file_path = '../data/swe-nv/YAK_INDEKS_CHERVONOJI_POMADI_PR.HTM'
-    print(extract_from_nv(file_path))
-    file_path = '../data/swe-nv/GODOVSHCHINA_VTORZHENIYA_ROSSII.HTM'
-    print(extract_from_nv(file_path))
-    file_path = '../data/swe-nv/EXPERTS4658.HTM'
-    print(extract_from_nv(file_path))
+def extract_from_tyzhden(file_path):
+    '''
+    TODO: add processing of <blockquote> tags: they still have residual tags inside.
+    TODO2: add processing of interviews, bc now I just skip all the text:
+    https://tyzhden.ua/heneral-oleksandr-skipalskyj-pro-istoriiu-stanovlennia-spetssluzhb-ukrainy-iak-derzhavnykh-instytutsij-rozmova-2/
+    Text in Tyzhden is instide <p> tag but the captions to the pictures are also inside <p> tag, as well as
+    "read also" part, so I clean it manually
+    REGEX looks for <p>text</p> and ignores <p> which has any class inside or <p> which has inner tags,
+    like <p> <img> ... </p>
+    '''
+    with open(file_path, encoding='utf-8') as fp:
+       html = fp.read()
+    soup = BeautifulSoup(html, "html.parser")
 
+    date = soup.find("div", class_="dt").get_text(strip=True)
+    # remap data since it's in Ukrainian
+    date_lst = [UKR2ENG[elem] if elem in UKR2ENG else elem for elem in date.split()]
+    parsed_date = datetime.strptime(' '.join(date_lst), '%d %B %Y, %H:%M').strftime(UNIFIED_PARSE_DATE)
+
+    # process tags since they are not a list but a string and get_text() returns them as a single string
+    tag_string = str(soup.find("div", class_="tags").find("div", class_="all-tags"))
+    tags = re.findall(r'<a .*?>.*?</a>', tag_string)
+    keywords = [re.sub(r'<.*?>', '', tag) for tag in tags]
+
+ 
+    text_raw = soup.find("div", class_="entry-content")
+    text_cleaned = clean_text_tyzhden(text_raw)
+
+    article_info = {
+        "date_published": parsed_date,
+        "genre": None,  # TODO!!!!
+        "author": soup.find("span", class_="a-name").get_text(strip=True),
+        "keywords": keywords,  # in the current article, there are no KWs
+        "title": soup.find('h1').get_text(strip=True),
+        "abstract": text_cleaned[0],
+        "article_body": ' '.join(text_cleaned),
+        "file_path": file_path,
+    }
+
+    return article_info
+
+
+def clean_text_tyzhden(raw_text):
+    match_list = re.findall(TEXT_RE, str(raw_text))
+    extracted = []
+    for match_ in match_list:
+        # text is in the second group, each match is a tuple
+        cleaned = re.sub(TAG_RE, '', match_[1])
+        if cleaned.lower().startswith('читайте також'):
+            continue
+        extracted.append(cleaned)
+    return extracted
+
+
+def extract_from_hro(file_path):
+    with open(file_path, encoding='utf-8') as fp:
+       html = fp.read()
+    soup = BeautifulSoup(html, "html.parser")
+
+    abstract = soup.find("div", class_="o-lead").get_text(strip=True)
+    text_list = soup.find_all("p", class_="text-start")
+    clean_text = [t.get_text(strip=True) for t in text_list if t.get_text(strip=True)]
+    clean_text = [abstract] + clean_text
+
+    keywords = [
+        k.get_text(strip=True) 
+        for i, k in enumerate(
+            soup.find("ul", class_="c-tags__list").find_all("li"))
+        if i > 0
+    ]
+
+    author = soup.find("a", class_="c-post-author__name").get_text(strip=True)
+    date = soup.find("time")["datetime"].split('T')[0]
+    parsed_date = datetime.strptime(date, '%Y-%m-%d').strftime(UNIFIED_PARSE_DATE)
+
+    article_info = {
+        "date_published": parsed_date,
+        "genre": None,  # TODO!!!!
+        "author": author,
+        "keywords": keywords,
+        "title": soup.find("h1").get_text(strip=True),
+        "abstract": abstract,
+        "article_body": ' '.join(clean_text),
+        "file_path": file_path,
+    }
+
+    return article_info
+
+
+#if __name__ == '__main__':
+    #file_path = '../data/swe-tyzhen/ua_tyzhden_TYZHDEN_1917_1922_UKRAINSKYJ_NATSIONALI_INDEX.HTM'
+    #print(extract_from_tyzhden(file_path))

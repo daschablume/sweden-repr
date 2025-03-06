@@ -14,6 +14,8 @@ DATA2FUNC = {
     'ukrinform': ps.extract_from_ukrinform,
     'sputnik': ps.extract_from_sputnik,
     'nv': ps.extract_from_nv,
+    'tyzhden': ps.extract_from_tyzhden,
+    'hro': ps.extract_from_hro,
 }
 
 
@@ -37,6 +39,9 @@ if __name__ == '__main__':
     parsed_files, logs = [], []
 
     for file_path in tqdm(files, desc="Processing files", unit="file"):
+        if "tag" in file_path.lower():
+            print(f'Skipping tag file... {file_path}')
+            continue
         try:
             # not relevant but good to keep in mind: 
             # add the id of the article of handle it in some other way bc UKRINFORM has doubling aricles

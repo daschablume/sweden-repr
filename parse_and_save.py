@@ -1,70 +1,114 @@
-from glob import glob
+import glob
 import os
 import sys
 
 import pandas as pd
 from tqdm import tqdm
 
-import parse as ps
+from extractors import (
+    SputnikExtractor, UkrinformExtractor, NvExtractor,
+    HromadskeExtractor, KyivPostExtractor,
+)
 
 PATH = '../data'
 OUT_PATH = os.path.join(PATH, 'parsed_data')
 
-DATA2FUNC = {
-    'ukrinform': ps.extract_from_ukrinform,
-    'sputnik': ps.extract_from_sputnik,
-    'nv': ps.extract_from_nv,
-    'tyzhden': ps.extract_from_tyzhden,
-    'hro': ps.extract_from_hro,
+DATASET_CONFIG = {
+    'sputnik': {
+        'extractor': SputnikExtractor,
+        'path_schema': f"{'[0-9]' * 8}/*.html",
+    },
+    'ukrinform': {
+        'extractor': UkrinformExtractor,
+        'path_schema': "**/[!index-pages]*//*.html",
+    },
+    'nv': {
+        'extractor': NvExtractor,
+        'path_schema': "**/[!index-pages]*//*.html",
+    },
+    'hromadske': {
+        'extractor': HromadskeExtractor,
+        'path_schema': '*',
+    },
+    'kyivpost': {
+        'extractor': KyivPostExtractor,
+        'path_schema': '**/[!index-pages]*//*.html',
+    },
 }
 
 
 if __name__ == '__main__':
     'works like this: from the folder "code" python parse_and_save.py <dataset_name>'
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         print('Usage: <dataset name>')
         sys.exit(1)
 
     dataset_name = sys.argv[1]
-    if dataset_name not in DATA2FUNC:
+    if dataset_name not in DATASET_CONFIG:
         print(f"Dataset {dataset_name} is not supported")
         sys.exit(1)
-        
+
+    rerun = False
+    if len(sys.argv) == 3:
+        if sys.argv[2] == 'rerun':
+            rerun = True
+        else: 
+            print('The second argument is not recognized. '
+                'Use "rerun" to rerun the parsing. '
+                'Continuing without rerun'
+            )
+
+    os.makedirs(OUT_PATH, exist_ok=True)
+    
     out_path = os.path.join(OUT_PATH, f'{dataset_name}.csv')
     log_path = os.path.join(OUT_PATH, f'{dataset_name}_log.txt')
-    files = glob(os.path.join(PATH, f'swe-{dataset_name}', '*'))
 
-    parse_func = DATA2FUNC[dataset_name]
+    extractor = DATASET_CONFIG[dataset_name]['extractor']()
+    path_schema = DATASET_CONFIG[dataset_name]['path_schema']
+
+    filepaths = os.path.join(PATH, dataset_name, path_schema)
+    files = glob.iglob(filepaths, recursive=True)  # generator cause there might be 10k files
 
     parsed_files, logs = [], []
 
-    for file_path in tqdm(files, desc="Processing files", unit="file"):
-        if "tag" in file_path.lower():
-            print(f'Skipping tag file... {file_path}')
+    # don't load again the files which were already processed
+    processed_files = set()
+    existing_df = None
+    # if rerun, process all files from the top
+    if not rerun:
+        existing_df = pd.read_csv(out_path) if os.path.exists(out_path) else None
+        if existing_df is not None:
+            processed_files = set(existing_df['file_path'])
+    
+    for file_path in tqdm(files, desc="Processing files\n", unit="file"):
+        print(f'Processing file: {file_path}')
+        normalized_path = file_path.replace('../data/', '')
+        if normalized_path in processed_files:
+            print(f'File already processed: {normalized_path}')
             continue
         try:
-            # not relevant but good to keep in mind: 
-            # add the id of the article of handle it in some other way bc UKRINFORM has doubling aricles
-            # maybe just like write a script which will check which articles are in UKRINFORM
-            # and which are in www.ukrinform.ua folders -- the same id of an article means the same content
-            parsed = parse_func(file_path)
+            parsed = extractor.extract(file_path)
             if not parsed:
-                print('No meta or body found')
-                print('Skipping article....')
-                logs.append(file_path)
+                message = f'No valid article data found in {file_path}'
+                print(message)
+                logs.append(message)
                 continue
             parsed_files.append(parsed)
         except Exception as e:
-            print(f"Error processing {file_path}: {e}")
-            logs.append(f"Error processing {file_path}: {e}")
+            message = f"Error processing {file_path}: {e}"
+            print(message)
+            logs.append(message)
 
-    df = pd.DataFrame(parsed_files)
-    df.to_csv(out_path, index=False)
+    if parsed_files:
+        df = pd.DataFrame(parsed_files)
+    else:
+        print('No data to save')
+        sys.exit(1)
+    
+    if existing_df is None:
+        df.to_csv(out_path, index=False)
+    else:
+        df.to_csv(out_path, index=False, mode='a', header=False)
 
     with open(log_path, 'w', encoding='utf-8') as fp:
         fp.write('\n'.join(logs))
-
-
-
-
-

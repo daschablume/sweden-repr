@@ -172,8 +172,58 @@ class UkrinformParser(SourceParser):
             return article_dir
         return self.subdirs[rubric]
 
+
 class EurActivParser(SourceParser):
     def parse_tag(self, html):
         soup = self.make_soup(html)
         return [h_tag.find('a')['href'] for h_tag in soup.find_all("h3")]
-    
+
+    def get_file_dest(self, link, source_dir):
+        '''
+        Returns a full path to the file to be scraped from the link.
+
+        Since I have a lot of links from httrack, which are saved in the following way:
+        www.euractiv.com/section/<section_name>/<genre_name>/<article_name>/index.html,
+        I want to check first whether I have article saved. 
+        Otherwise, I want to save the article in the same way for consistency,
+        since httrack gave me ~1/2 of the articles I need.
+
+        I also check whether the path exists in this function, so I can create a directory if needed
+        '''
+        dir_path = os.path.join(source_dir, link.replace('https://', ''))
+        file_path = os.path.join(dir_path, 'index.html')
+        if os.path.exists(file_path):
+            return file_path
+        os.makedirs(dir_path, exist_ok=True)
+        return file_path
+
+
+class TyzhdenParser(SourceParser):
+    def parse_tag(self, html):
+        soup = self.make_soup(html)
+        return [
+            tag.find('a')['href'] 
+            for tag in soup.find_all('div', class_='news-item')
+        ]
+
+    def get_file_dest(self, link, source_dir):
+        '''
+        Returns a full path to the file to be scraped from the link.
+
+        Since I have a lot of links from httrack, which are saved in the following way:
+            TYZHDEN/<ARTICLE_NAME>/INDEX.HTM,
+        I want to check first whether I have article saved. 
+        Otherwise, I want to save the article in the same way for consistency,
+        since httrack gave me ~3/4 of the articles I need.
+
+        I also check whether the path exists in this function, so I can create a directory if needed.
+        '''
+        # make the file name shorter, like in the httrack version, uppercased and with underscores
+        file_dir = link.split('/')[-2].upper().replace('-', '_')[:31]
+        file_full_dir = os.path.join(source_dir, 'TYZHDEN', file_dir)
+        file_path = os.path.join(file_full_dir, 'INDEX.HTM')
+
+        if os.path.exists(file_path):
+            return file_path
+        os.makedirs(file_full_dir, exist_ok=True)
+        return file_path

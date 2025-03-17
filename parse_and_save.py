@@ -7,7 +7,9 @@ from tqdm import tqdm
 
 from extractors import (
     SputnikExtractor, UkrinformExtractor, NvExtractor,
-    HromadskeExtractor, KyivPostExtractor,
+    HromadskeExtractor, KyivPostExtractor, TyzhdenExtractor,
+    EuractivExtractor, KyivPostArchiveExtractor
+
 )
 
 PATH = '../data'
@@ -20,20 +22,32 @@ DATASET_CONFIG = {
     },
     'ukrinform': {
         'extractor': UkrinformExtractor,
-        'path_schema': "**/[!index-pages]*//*.html",
+        'path_schema': "**/*.html",
     },
     'nv': {
         'extractor': NvExtractor,
-        'path_schema': "**/[!index-pages]*//*.html",
+        'path_schema': "**/*.html",
     },
     'hromadske': {
         'extractor': HromadskeExtractor,
-        'path_schema': '*',
+        'path_schema': '*.html',
     },
     'kyivpost': {
         'extractor': KyivPostExtractor,
-        'path_schema': '**/[!index-pages]*//*.html',
+        'path_schema': '**/*.html',
     },
+    'kyivpost_archive': {
+        'extractor': KyivPostArchiveExtractor,
+        'path_schema': 'kyivpost/archive_kyivpost/**/*.html',
+    },
+    'tyzhden': {
+        'extractor': TyzhdenExtractor,
+        'path_schema': '**/*.HTM',
+    },
+    'euractiv': {
+        'extractor': EuractivExtractor,
+        'path_schema': '**/*.html',
+    }
 }
 
 
@@ -67,6 +81,8 @@ if __name__ == '__main__':
     path_schema = DATASET_CONFIG[dataset_name]['path_schema']
 
     filepaths = os.path.join(PATH, dataset_name, path_schema)
+    if dataset_name == 'kyivpost_archive':
+        filepaths = os.path.join(PATH, path_schema)
     files = glob.iglob(filepaths, recursive=True)  # generator cause there might be 10k files
 
     parsed_files, logs = [], []
@@ -80,7 +96,15 @@ if __name__ == '__main__':
         if existing_df is not None:
             processed_files = set(existing_df['file_path'])
     
+    already_processed = set()  # relevant for "euractiv" only
     for file_path in tqdm(files, desc="Processing files\n", unit="file"):
+        if 'index-pages' in file_path:
+            continue
+        article_folder = file_path.split('/')[-2]
+        if dataset_name == 'euractiv':
+            if article_folder in already_processed:
+                continue
+            already_processed.add(article_folder)
         print(f'Processing file: {file_path}')
         normalized_path = file_path.replace('../data/', '')
         if normalized_path in processed_files:

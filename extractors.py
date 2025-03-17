@@ -248,7 +248,7 @@ class NvExtractor(BaseExtractor):
 class UkrinformExtractor(BaseExtractor):
     def __init__(self):
         super().__init__()
-        self.date_str_format = '%d %B %Y'
+        self.date_str_format = '%d.%m.%Y %H:%M'
     
     def find_title(self, soup) -> str:
         if title_h := soup.find("h1", class_="newsTitle"):
@@ -285,17 +285,20 @@ class UkrinformExtractor(BaseExtractor):
         
     def find_article_body(self, soup) -> str:
         if article_body := soup.find('div', class_="newsText"):
-            return [
+            article_body_list = [
                 t.get_text(strip=True) 
                 for t in article_body.find_all('p') 
                 if t.get_text()
             ]
         # for interview
         if article_body := soup.find_all('div', class_="interviewText"):
-            return [
+            article_body_list = [
                 t.get_text(strip=True) 
                 for t in article_body if t.get_text()
             ]
+        if article_body_list:
+            return ' '.join(article_body_list)
+        return None     
         
     def find_keywords(self, soup) -> list:
         return [
@@ -367,3 +370,152 @@ class KyivPostExtractor(BaseExtractor):
     def find_author(self, soup) -> str:
         return soup.find("a", class_="post-author-name").get_text(strip=True)
 
+
+class KyivPostArchiveExtractor(KyivPostExtractor):
+    def __init__(self):
+        super().__init__()
+        self.date_str_format = "%Y-%m-%d"
+    
+    def find_date(self, soup) -> str:
+        return soup.find('time')['datetime'].split('T')[0]
+    
+    def find_abstract(self, soup) -> str:
+        # TODO: very lazy implementation
+        if article_body := soup.find('div', class_='entry-content'):
+            return article_body.find_all('p')[0].get_text(strip=True)
+        
+    def find_article_body(self, soup) -> str:
+        if article_body := soup.find('div', class_='entry-content'):
+            return [
+                p.get_text(strip=True) 
+                for p in article_body.find_all('p') 
+                if p.get_text(strip=True)
+            ]
+        
+    def find_keywords(self, soup) -> list:
+        # archive articles don't have keywords
+        return []
+    
+    def find_genre(self, soup) -> str:
+        return 'news'
+    
+    def find_author(self, soup) -> str:
+        return soup.find('div', class_='pm-item').find('a').get_text(strip=True)
+
+
+class TyzhdenExtractor(BaseExtractor):
+    def __init__(self):
+        super().__init__()
+        self.date_str_format = "%d %B %Y"
+        self.text_re = re.compile(r'<(p|strong)>([^<].*)<\/(p|strong)>')
+        self.tag_re = re.compile(r'(<a.[^>]*>|<\/\w+>)')
+        self.kw_re = re.compile(r'<a .*?>.*?</a>')
+        self.tag_ = re.compile(r'<.*?>')
+    
+    def find_title(self, soup) -> str:
+        return soup.find('h1').get_text(strip=True)
+    
+    def find_date(self, soup) -> str:
+        date = soup.find("div", class_="dt").get_text(strip=True)  # '9 Грудня 2011, 10:16'
+        date = date.split(", ")[0]
+        month = date.split()[1]
+        return date.replace(month, UKR2ENG[month.capitalize()])
+    
+    def find_abstract(self, soup) -> str:
+        # Tyzhden really doesn't have an abstract
+        return ''
+    
+    def find_article_body(self, soup) -> str:
+        if text_raw := soup.find("div", class_="entry-content"):
+            text_list = []
+            for p_tag in text_raw.find_all("p"):
+                sentence = p_tag.get_text(strip=True)
+                if sentence.lower().startswith("читайте"):
+                    continue
+                text_list.append(sentence.replace('\n', '').replace('\t', '').replace('\xa0', ' '))
+            return ' '.join(text_list)
+    
+    def find_keywords(self, soup) -> list:
+        # process tags since they are not a list but a string and get_text() returns them as a single string
+        tag_string = str(soup.find("div", class_="tags").find("div", class_="all-tags"))
+        tags = re.findall(self.kw_re, tag_string)
+        return [
+            re.sub(self.tag_, '', tag) 
+            for tag in tags
+        ]
+    
+    def find_genre(self, soup) -> str:
+        # TODO: 
+        return 'news'
+    
+    def find_author(self, soup) -> str:
+        if author_tag := soup.find("span", class_="a-name"):
+            return author_tag.get_text(strip=True)
+
+
+class EuractivExtractor(BaseExtractor):
+    def __init__(self):
+        super().__init__()
+        self.date_str_format = '%b %d, %Y'
+
+    def find_title(self, soup) -> str:
+        return soup.find('h1').get_text(strip=True)
+    
+    def find_date(self, soup) -> str:
+        return soup.find('span', class_='tw-border-grey').get_text(strip=True)        
+    
+    def find_article_body_and_abstract(self, soup) -> tuple[str, str]:
+        # div for paywall
+        if soup.find('div', class_='fp-pro'):
+            return None, None
+        if text_div := soup.find('div', id='metered-article'):
+            text_list = text_div.find_all('p')
+        if text_div := soup.find('div', class_='ea-article-body-content'):
+            text_list = text_div.find_all('p')
+        if text_list:
+            abstract = text_list[0].get_text(strip=True)
+            article_body = ' '.join([t.get_text(strip=True) for t in text_list])
+        return article_body, abstract
+    
+    def find_keywords(self, soup) -> list:
+        topics = soup.find('ul', class_='clearfix').find_all('li')
+        if topics:
+            return [topic.get_text(strip=True) for topic in topics]
+        return []
+    
+    def find_genre(self, file_path) -> str:
+        '''
+        Since links were scraped from httrack,
+        every article is in destination with the name of the genre.
+        '''
+        return file_path.split('/')[-3]
+
+    def find_author(self, soup) -> str:
+        if author_span := soup.find('span', class_='tw-font-bold'):
+            return author_span.get_text(strip=True)
+        return None
+
+    def find_abstract(self, soup) -> str:
+        raise NotImplementedError("Use find_article_body_and_abstract instead")
+
+    def find_article_body(self, soup) -> str:
+        raise NotImplementedError("Use find_article_body_and_abstract instead")
+
+    def extract(self, file_path) -> dict:
+        soup = self.make_soup(file_path)
+        article_body, abstract = self.find_article_body_and_abstract(soup)
+        if not article_body:
+            return None
+
+        genre = self.find_genre(file_path)
+               
+        return {
+            "title": self.find_title(soup),
+            "date_published": self.parse_date(self.find_date(soup)),
+            "abstract": abstract,
+            "article_body": article_body,
+            "keywords": self.find_keywords(soup),
+            "genre": genre,
+            "author": self.find_author(soup),
+            "file_path": self.normalize_path(file_path),
+        }  

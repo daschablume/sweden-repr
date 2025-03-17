@@ -227,3 +227,51 @@ class TyzhdenParser(SourceParser):
             return file_path
         os.makedirs(file_full_dir, exist_ok=True)
         return file_path
+
+
+class KyivpostArchiveParser(SourceParser):
+    def __init__(self, index_page_link=None, page_num=None):
+        super().__init__(index_page_link, page_num)
+        self.subdirs = set()
+        self.archive_subdir = 'archive_kyivpost'
+
+    def parse_tag(self, html):
+        soup = self.make_soup(html)
+        return [
+            grid.find('a')['href'] 
+            for grid in soup.find_all('div', class_='grid-3')
+        ]
+
+    def get_file_dest(self, link, source_dir):
+        '''
+        Returns a full path to the file to be scraped from the link.
+
+        I check whether we already have the directory (rubric) to avoid creating it in each
+        function call.
+
+        I also save archive articles in the `archive_kyivpost/` subdirectory, since
+        `archive.kyipost.com` led to bugs (because of dots).
+        '''
+        splitted = link.split('/')
+        rubric_subdir, article_name = splitted[-2], splitted[-1]
+        article_dir = os.path.join(source_dir, self.archive_subdir, rubric_subdir)
+        if rubric_subdir not in self.subdirs:
+            # 'kyivpost/archive_kyivpost/world/'
+            os.makedirs(article_dir, exist_ok=True)
+            self.subdirs.add(rubric_subdir)
+        return os.path.join(article_dir, article_name)
+    
+
+if __name__ == '__main__':
+    # real kyivpost path data/kyivpost/www.kyivpost.com/opinion
+    parser = KyivpostArchiveParser()
+    #print(parser.get_file_dest('https://archive.kyivpost.com/world/russias-rosneft-reports-889-mn-loss-from-assets-transfer-in-germany.html', 'kyivpost'))
+    #print(parser.get_file_dest('https://archive.kyivpost.com/ukraine-politics/shmyhal-ukraine-sweden-to-boost-cooperation-in-energy-ecology-cyber-security.html', 'kyivpost'))
+
+    tyzhden = TyzhdenParser()
+    print(tyzhden.get_file_dest('https://tyzhden.ua/mistechko-iak-alternatyva-podilu-na-stolychnist-i-provintsijnist/', 'tyzhden'))
+
+    euroactiv = EurActivParser()
+    print(euroactiv.get_file_dest('https://www.euractiv.com/section/politics/news/hungary-drops-veto-on-eus-russia-sanctions-rollover-after-several-oligarchs-de-listed/', 'euractiv'))
+
+    print(parser.subdirs)

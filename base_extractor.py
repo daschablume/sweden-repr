@@ -40,11 +40,13 @@ class BaseExtractor(ABC):
     def extract(self, file_path):
         """Extract article information from the HTML."""
         soup = self.make_soup(file_path)
+        article_body = self.find_article_body(soup)
+        if not article_body:
+            return None
         
         title = self.find_title(soup)
-        parsed_date = self.find_date(soup)
+        parsed_date = self.parse_date(self.find_date(soup))
         abstract = self.find_abstract(soup)
-        article_body = self.find_article_body(soup)
         keywords = self.find_keywords(soup)
         genre = self.find_genre(soup)
         author = self.find_author(soup)

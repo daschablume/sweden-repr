@@ -10,7 +10,8 @@ import pandas as pd
 
 from links_parser import (
     HromadskeParser, NvParser, SputnikParser,
-    UkrinformParser, EurActivParser, TyzhdenParser
+    UkrinformParser, EurActivParser, TyzhdenParser,
+    KyivpostArchiveParser
 )
 
 DATA = '/Users/macuser/Documents/UPPSALA/thesis/data'
@@ -34,6 +35,10 @@ SOURCES_CONFIG = {
     'tyzhden': TyzhdenParser(
         index_page_link='https://tyzhden.ua/page/{}/?s=%D1%88%D0%B2%D0%B5%D1%86%D1%96%D1%8F&old',
         page_num=121
+    ),
+    'kyivpost': KyivpostArchiveParser(
+        index_page_link='https://archive.kyivpost.com/page/{}/?s=sweden',
+        page_num=173
     )
 }
 
@@ -110,7 +115,9 @@ class SimpleScraper:
         session.headers.update(headers)
 
         for ind, row in tqdm(self.links.iterrows(), total=len(self.links), desc="Downloading articles"):
+            
             link = row['link']
+            print(f'Downloading {link}...')
             try:
                 filename = self.parser.get_file_dest(link, self.source_dir)
             except Exception as e:
@@ -152,7 +159,7 @@ class SimpleScraper:
                 fails += 1
             
             time.sleep(delay + random.uniform(*self.random_delay_range))
-            if fails >= 3:
+            if fails >= 3 and self.source == 'ukrinform':
                 fails = 0
                 print("Too many fails, going to sleep...")
                 time.sleep(HOUR_IN_SECONDS)
@@ -184,12 +191,8 @@ class SimpleScraper:
 
 
 if __name__ == '__main__':
-    scraper = SimpleScraper('ukrinform')
-    #scraper.get_index_pages()
-    #scraper.get_links_from_index_pages()
-    #scraper.scrape_articles()
-
-    #scraper = SimpleScraper('tyzhden')
+    scraper = SimpleScraper('kyivpost', timeout=60)
     #scraper.get_index_pages()
     #scraper.get_links_from_index_pages()
     scraper.scrape_articles()
+

@@ -16,6 +16,9 @@ from links_parser import (
 
 DATA = '/Users/macuser/Documents/UPPSALA/thesis/data'
 HOUR_IN_SECONDS = 3600
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36',
+}
 
 SOURCES_CONFIG = {
     'hromadske': HromadskeParser(),
@@ -108,16 +111,11 @@ class SimpleScraper:
             raise ValueError('No links found')
 
         session = requests.Session()
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36',
-            'Referer': 'https://www.ukrinform.ua/'
-        }
-        session.headers.update(headers)
+        session.headers.update(HEADERS)
 
         for ind, row in tqdm(self.links.iterrows(), total=len(self.links), desc="Downloading articles"):
             
             link = row['link']
-            print(f'Downloading {link}...')
             try:
                 filename = self.parser.get_file_dest(link, self.source_dir)
             except Exception as e:
@@ -126,16 +124,14 @@ class SimpleScraper:
             if os.path.exists(filename) and os.path.getsize(filename) > 0:
                 # this special check is for ukrinform,
                 # because there were a lot of javascript-protected pages
-                if self.source == 'ukrinform':
-                    with open(filename, "r", encoding="utf-8") as f:
-                        file = f.read()
-                    soup = BeautifulSoup(file, 'html.parser')
-                    if soup.find("h1", class_="newsTitle"):
-                        print(f"Skipping already downloaded: {filename}")
-                        continue
-                else:
+                with open(filename, "r", encoding="utf-8") as f:
+                    file = f.read()
+                soup = BeautifulSoup(file, 'html.parser')
+                if soup.find("h1"):
                     print(f"Skipping already downloaded: {filename}")
                     continue
+                else:
+                    print(f"Found incomplete article, redownloading: {filename}")
 
             retries = 3
             delay = self.delay
@@ -171,11 +167,7 @@ class SimpleScraper:
         page_num = self.parser.page_num
         
         session = requests.Session()
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36',
-            'Referer': 'https://www.ukrinform.ua/'
-        }
-        session.headers.update(headers)
+        session.headers.update(HEADERS)
         
         for p in tqdm(range(1, page_num), desc="Downloading index pages", total=page_num-1):
             page = self.parser.index_page_link.format(p)
@@ -191,7 +183,7 @@ class SimpleScraper:
 
 
 if __name__ == '__main__':
-    scraper = SimpleScraper('kyivpost', timeout=60)
+    scraper = SimpleScraper('nv', timeout=60)
     #scraper.get_index_pages()
     #scraper.get_links_from_index_pages()
     scraper.scrape_articles()

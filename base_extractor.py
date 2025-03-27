@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
+import re
 
 from bs4 import BeautifulSoup
 
@@ -17,6 +18,10 @@ class BaseExtractor(ABC):
         return file_path
     
     def parse_date(self, date):
+        """
+        Parses a date string to a unified format.
+        The input data format must be defined in the child class.
+        """
         try:
             parsed = datetime.strptime(
                 date, self.date_str_format
@@ -26,6 +31,7 @@ class BaseExtractor(ABC):
             return None
     
     def make_soup(self, file_path):
+        """Reads a file and returns a BeautifulSoup object."""
         try:
             with open(file_path, encoding='utf-8') as fp:
                 html = fp.read()
@@ -89,3 +95,19 @@ class BaseExtractor(ABC):
     @abstractmethod
     def find_author(self, soup) -> str:
         pass
+
+    def _remove_html_tags(self, text: str) -> str:
+        """
+        Removes HTML tags from a str of text.
+        It can be done with just BeautifulSoup, but BS deletes tags and merges 
+        the text. So "he crushed into a<br>tree" => "he crushed into atree".
+        This leads to errors in the future processing of the text.
+        With regex, we get "he crushed into a tree". 
+
+        Should be used in find_article_body() method.
+        """
+        cleaned_text = re.sub(r'<[^>]+>', ' ', text)       
+        cleaned_text = cleaned_text.replace('\xa0', ' ').replace('<0xa0>', ' ') 
+        cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
+        cleaned_text = cleaned_text.replace('\xa0', ' ').replace('<0xa0>', ' ')
+        return cleaned_text

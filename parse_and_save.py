@@ -9,7 +9,6 @@ from extractors import (
     SputnikExtractor, UkrinformExtractor, NvExtractor,
     HromadskeExtractor, KyivPostExtractor, TyzhdenExtractor,
     EuractivExtractor, KyivPostArchiveExtractor
-
 )
 
 PATH = '../data'
@@ -34,7 +33,7 @@ DATASET_CONFIG = {
     },
     'kyivpost': {
         'extractor': KyivPostExtractor,
-        'path_schema': '**/*.html',
+        'path_schema': 'www.kyivpost.com/**/*.html',
     },
     'kyivpost_archive': {
         'extractor': KyivPostArchiveExtractor,
@@ -73,6 +72,9 @@ if __name__ == '__main__':
             )
 
     os.makedirs(OUT_PATH, exist_ok=True)
+    if dataset_name == 'kyivpost_archive' or dataset_name == 'kyivpost':
+        OUT_PATH = os.path.join(OUT_PATH, 'kyivpost_splitted')
+        os.makedirs(OUT_PATH, exist_ok=True)
     
     out_path = os.path.join(OUT_PATH, f'{dataset_name}.csv')
     log_path = os.path.join(OUT_PATH, f'{dataset_name}_log.txt')
@@ -81,8 +83,6 @@ if __name__ == '__main__':
     path_schema = DATASET_CONFIG[dataset_name]['path_schema']
 
     filepaths = os.path.join(PATH, dataset_name, path_schema)
-    if dataset_name == 'kyivpost_archive':
-        filepaths = os.path.join(PATH, path_schema)
     files = glob.iglob(filepaths, recursive=True)  # generator cause there might be 10k files
 
     parsed_files, logs = [], []

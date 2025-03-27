@@ -1,11 +1,7 @@
-import json
 import re
 
 from base_extractor import BaseExtractor
 
-
-TEXT_RE = re.compile(r'<(p|strong)>([^<].*)<\/(p|strong)>')
-TAG_RE = re.compile(r'(<a.[^>]*>|<\/\w+>)')
 
 UKR2ENG = {
     "Січня": "January", "Лютого": "February", "Березня": "March", "Квітня": "April",
@@ -59,15 +55,21 @@ class SputnikExtractor(BaseExtractor):
     
     def find_article_body(self, body):
         text_blocks = [
-            block.get_text(strip=True) 
+            self._remove_html_tags(str(block))
             for block 
             in body.find_all("div", class_="article__block")
         ]
-        return " ".join(text_blocks)
+        cleaned_text =  " ".join(text_blocks).replace(' .', '.')
+        cleaned_text = self._remove_all_copyright_text(cleaned_text)
+        return cleaned_text
+
+    def _remove_all_copyright_text(self, text: str) -> str:
+        '''Removes captions to copiritghted images'''
+        return re.sub(r'©.*?©', '', text, flags=re.DOTALL)
     
     def find_keywords(self, meta, footer):
         '''
-        Sometimes keywords are scatter in both footer and meta, so let's find all of them.
+        Sometimes keywords are scattered in both footer and meta, so let's find all of them.
         '''
         keywords = []
         if meta_keywords := meta.find(itemprop="keywords"):
@@ -127,8 +129,12 @@ class HromadskeExtractor(BaseExtractor):
             for p in content.find_all("p", class_="c-read-more__title")
         ]
         clean_text = [
-            t.get_text(strip=True) for t in text_list 
-            if t.get_text(strip=True) and t.get_text(strip=True) not in read_more
+            self._remove_html_tags(str(t))
+            for t in text_list
+        ]
+        clean_text = [ 
+            t for t in clean_text 
+            if t and t not in read_more
         ]
         return " ".join(clean_text)
     
@@ -212,8 +218,9 @@ class NvExtractor(BaseExtractor):
         else:
             text_div = soup.find("div", class_="content_wrapper").find_all("p")
         article_text = [
-            t.get_text(strip=True).replace('\xa0', ' ').replace("<0xa0>", " ") 
-            for t in text_div if t.get_text(strip=True)
+            self._remove_html_tags(str(t))
+            for t in text_div
+            if t.get_text(strip=True)
         ]
         return ' '.join(article_text).replace('Реклама', '')
 
@@ -347,10 +354,13 @@ class KyivPostExtractor(BaseExtractor):
         elif section := soup.find("section", id="section_1").find("p"):
             return section.get_text(strip=True)
         
-    
     def find_article_body(self, soup) -> str:
         text_tags = soup.find("section", id="section_0").find_all('p')
-        text = [t.get_text(strip=True) for t in text_tags]
+        text = [
+            self._remove_html_tags(str(t))
+            for t in text_tags
+        ]
+        text = [t for t in text if not t.startswith('Follow our') and t.strip()]
         return ' '.join(text)
     
     def find_keywords(self, soup) -> list:
@@ -382,15 +392,29 @@ class KyivPostArchiveExtractor(KyivPostExtractor):
     def find_abstract(self, soup) -> str:
         # TODO: very lazy implementation
         if article_body := soup.find('div', class_='entry-content'):
-            return article_body.find_all('p')[0].get_text(strip=True)
+            return (
+                article_body.find_all('p')[0]
+                .get_text(strip=True)
+                .replace('\xa0', ' ').replace('<0xa0>', ' ').replace('\n', ' ')
+            )
         
     def find_article_body(self, soup) -> str:
+        '''
+        KyivPostArchive has a lot of javascript, 
+        so here, I get the body of an article using BeautifulSoup methods,
+        otherwise it gets too messy.
+        '''
         if article_body := soup.find('div', class_='entry-content'):
-            return [
-                p.get_text(strip=True) 
+            text_list = [
+                p.get_text(strip=True).replace('\xa0', ' ').replace('<0xa0>', ' ').replace('\n', ' ') 
                 for p in article_body.find_all('p') 
                 if p.get_text(strip=True)
             ]
+            # sometimes the first sentence is wrapped into double <p> and then it's 
+            # parsed as two sentences -- avoid repetition
+            if text_list[1].startswith(text_list[0][:10]):
+                text_list = text_list[1:]
+            return ' '.join(text_list)
         
     def find_keywords(self, soup) -> list:
         # archive articles don't have keywords
@@ -407,8 +431,6 @@ class TyzhdenExtractor(BaseExtractor):
     def __init__(self):
         super().__init__()
         self.date_str_format = "%d %B %Y"
-        self.text_re = re.compile(r'<(p|strong)>([^<].*)<\/(p|strong)>')
-        self.tag_re = re.compile(r'(<a.[^>]*>|<\/\w+>)')
         self.kw_re = re.compile(r'<a .*?>.*?</a>')
         self.tag_ = re.compile(r'<.*?>')
     
@@ -473,8 +495,22 @@ class EuractivExtractor(BaseExtractor):
         if text_div := soup.find('div', class_='ea-article-body-content'):
             text_list = text_div.find_all('p')
         if text_list:
-            abstract = text_list[0].get_text(strip=True)
-            article_body = ' '.join([t.get_text(strip=True) for t in text_list])
+            text = [
+                self._remove_html_tags(str(t))
+                for t in text_list
+            ]
+            text = [t for t in text if t.strip()]
+            abstract = text[0]
+            article_body = ' '.join(text)
+            # check repetition in the body: find the last 3 words, look for them in the text.
+            # if they are present more than once, cut the text
+            article_words = article_body.split()
+            united_words = ' '.join(article_words[-3:])
+            ind_1 = article_body.find(united_words)
+            ind_2 = article_body.find(united_words, ind_1+1)
+            if ind_2 != -1:
+                article_body = article_body[:ind_1+len(united_words)]
+
         return article_body, abstract
     
     def find_keywords(self, soup) -> list:

@@ -328,7 +328,6 @@ class UkrinformExtractor(BaseExtractor):
         return "укрінформ"
         
 
-
 class KyivPostExtractor(BaseExtractor):
     def __init__(self):
         super().__init__()
@@ -399,22 +398,9 @@ class KyivPostArchiveExtractor(KyivPostExtractor):
             )
         
     def find_article_body(self, soup) -> str:
-        '''
-        KyivPostArchive has a lot of javascript, 
-        so here, I get the body of an article using BeautifulSoup methods,
-        otherwise it gets too messy.
-        '''
         if article_body := soup.find('div', class_='entry-content'):
-            text_list = [
-                p.get_text(strip=True).replace('\xa0', ' ').replace('<0xa0>', ' ').replace('\n', ' ') 
-                for p in article_body.find_all('p') 
-                if p.get_text(strip=True)
-            ]
-            # sometimes the first sentence is wrapped into double <p> and then it's 
-            # parsed as two sentences -- avoid repetition
-            if text_list[1].startswith(text_list[0][:10]):
-                text_list = text_list[1:]
-            return ' '.join(text_list)
+            clean_body = self._remove_html_tags(str(article_body))
+            return clean_body
         
     def find_keywords(self, soup) -> list:
         # archive articles don't have keywords

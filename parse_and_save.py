@@ -83,6 +83,9 @@ if __name__ == '__main__':
     path_schema = DATASET_CONFIG[dataset_name]['path_schema']
 
     filepaths = os.path.join(PATH, dataset_name, path_schema)
+    if dataset_name == 'kyivpost_archive':
+        filepaths = os.path.join(PATH, path_schema)
+
     files = glob.iglob(filepaths, recursive=True)  # generator cause there might be 10k files
 
     parsed_files, logs = [], []

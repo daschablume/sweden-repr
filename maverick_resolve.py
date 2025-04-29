@@ -6,7 +6,7 @@ import spacy
 
 NLP = spacy.load("en_core_web_sm")
 
-
+# TODO: disentangle entities like Zlata Ognevich and some other celebrity
 def get_canonical_mention(cluster: list) -> str:
     """
     Given a coreference cluster, return the best entity.
@@ -19,8 +19,14 @@ def get_canonical_mention(cluster: list) -> str:
         person_entities = [ent.text for ent in doc.ents if ent.label_ == "PERSON"]
         is_clean_person = len(person_entities) > 0 and " ".join(person_entities) == mention.strip()
 
+        name_parts = 0
+        if is_clean_person and person_entities:
+            name_parts = len(person_entities[0].split())
+
         has_org = any(ent.label_ == "ORG" for ent in doc.ents)
         has_gpe = any(ent.label_ == "GPE" for ent in doc.ents)
+        # check if there are any other labels, but exclude "additional" labels, not related to the proper name
+        has_any_label = any(ent.label_ for ent in doc.ents if ent.label_ not in ["CARDINAL", "DATE", "ORDINAL", "PERCENT", "QUANTITY", "TIME"])
         
         # downvote if it consists only of pronouns
         not_pronoun = True
@@ -29,8 +35,10 @@ def get_canonical_mention(cluster: list) -> str:
 
         score = (
             is_clean_person,
+            name_parts,
             has_org,
             has_gpe,
+            has_any_label,
             not_pronoun,
             -len(mention.split())  # shorter mentions preferred
         )
@@ -146,7 +154,7 @@ def detokenize(tokens):
     return out
 
 
-def resolve(output: dict) -> str:
+def resolve(maverick_out: dict) -> str:
     '''
     Takes in a dictionary from maverick's predict() method which constists of 
     a list of tokens, a list of clusters of token text, and a list of clusters of
@@ -156,9 +164,9 @@ def resolve(output: dict) -> str:
 
     token_id2replacement = {}
 
-    tokens = output['tokens']
-    clusters = output['clusters_token_text']
-    spans_of_spans = output['clusters_token_offsets']
+    tokens = maverick_out['tokens']
+    clusters = maverick_out['clusters_token_text']
+    spans_of_spans = maverick_out['clusters_token_offsets']
     for cluster, spans in zip(clusters, spans_of_spans):
         # don't do anything with clusters like ['trade', 'trade']
         if _is_the_same(cluster):
@@ -177,7 +185,7 @@ def resolve(output: dict) -> str:
             token_id2replacement[start] = best_entity
             # make a possesive form
             if start == end and (tokens[start] in [
-                "its", "their", "hers", "his", "our"
+                "its", "their", "hers", "his", "our", "my", "yours",
             ]):
                 token_id2replacement[start] = best_entity + "'s"
             start += 1

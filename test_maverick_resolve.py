@@ -24,14 +24,45 @@ assert get_canonical_mention([
     'Chumak']
 ) == "Chumak"
 
-assert get_canonical_mention(['Olle Tholander',
- 'Olle Tholander , general director of Ericsson in Ukraine',
- 'general director of Ericsson in Ukraine',
- 'Olle Tholander',
- 'Olle Tholander , general director of Ericsson in Ukraine , who has previously worked in Japan and England',
- 'Tholander']) == 'Olle Tholander'
+assert get_canonical_mention(
+    ['Olle Tholander',
+    'Olle Tholander , general director of Ericsson in Ukraine',
+    'general director of Ericsson in Ukraine',
+    'Olle Tholander',
+    'Olle Tholander , general director of Ericsson in Ukraine , who has previously worked in Japan and England',
+    'Tholander']
+) == 'Olle Tholander'
+
+assert get_canonical_mention([
+    'his',
+    'Tomas Transtromer',
+    'Tomas Transtromer , Sweden ’s most famous poet',
+    'Sweden ’s most famous poet',
+    'Tomas'
+]) == 'Tomas Transtromer'
+
+assert get_canonical_mention([
+    'The Nobel Prize in literature',
+    'the prize',
+    'prize',
+    'the literature prize',
+    'the prize',
+    'the literature prize'
+]) == 'The Nobel Prize in literature'
 
 assert get_canonical_mention(['Internet speeds', 'they']) == 'Internet speeds'
+
+assert get_canonical_mention([
+    'Eurovision',
+    'the contest',
+    'The show ’s',
+    'it',
+    'its',
+    'Eurovision ’s',
+    'Eurovision , one of the world ’s longest - running television programmes',
+    'one of the world ’s longest - running television programmes',
+]) == 'Eurovision'
+
 
 # this is based solely on the length; maybe it's better to have a longer entity if it's not a NER?
 # need more data
@@ -53,3 +84,4 @@ llist = [
 assert find_nonoverlapping_spans(llist) == llist
 
 assert find_nonoverlapping_spans(((62, 64), (62, 66), (65, 66))) == [(62, 66)]
+

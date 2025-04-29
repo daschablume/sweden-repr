@@ -21,11 +21,11 @@ def test_SputnikExtractor_2():
 def test_HromadskeExtractor():
     extractor = HromadskeExtractor()
     links = [
-        '/Users/macuser/Documents/UPPSALA/thesis/data/hromadske/223738-shvetsiia-vydilyt-eur28-mln-na-viyskovu-pidtrymku-ukrayiny-kudy-spriamuiut-hroshi.html',
-        '/Users/macuser/Documents/UPPSALA/thesis/data/hromadske/224858-shvetsiia-nadast-ukrayini-novyy-paket-dopomohy-dlia-enerhosystemy.html',
-        '/Users/macuser/Documents/UPPSALA/thesis/data/hromadske/227159-hretsiia-zaprovadzuye-shestydennyy-robochyy-tyzden.html',
-        '/Users/macuser/Documents/UPPSALA/thesis/data/hromadske/greciya-peredast-ukrayini-radyanske-ozbroyennya-natomist-nimechchina-nadast-afinam-svoyi-bmp.html',
-        '/Users/macuser/Documents/UPPSALA/thesis/data/hromadske/holovne-pytannia-v-perehovorakh-trampa-i-putina-bude-syriia-eks-holova-mzs-shvetsii.html',
+        '../data/hromadske/223738-shvetsiia-vydilyt-eur28-mln-na-viyskovu-pidtrymku-ukrayiny-kudy-spriamuiut-hroshi.html',
+        '../data/hromadske/224858-shvetsiia-nadast-ukrayini-novyy-paket-dopomohy-dlia-enerhosystemy.html',
+        '../data/hromadske/227159-hretsiia-zaprovadzuye-shestydennyy-robochyy-tyzden.html',
+        '../data/hromadske/greciya-peredast-ukrayini-radyanske-ozbroyennya-natomist-nimechchina-nadast-afinam-svoyi-bmp.html',
+        '../data/hromadske/holovne-pytannia-v-perehovorakh-trampa-i-putina-bude-syriia-eks-holova-mzs-shvetsii.html',
     ]
     for link in links:
         data = extractor.extract(link)
@@ -124,6 +124,3 @@ def test_Euractiv():
         'Viktor Orbán'
     ]
     assert parsed_news['genre'] == 'news'
-
-if __name__ == "__main__":
-    test_Euractiv()

@@ -2,20 +2,127 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Sweden Prepr</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sweden Representation in Foreign Media</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    
+    header {
+      background-color: #005293; /* Swedish blue */
+      color: #ffcc00; /* Swedish yellow */
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 30px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      text-align: center;
+    }
+    
+    .time-period {
+      background-color: #fff;
+      border-radius: 5px;
+      padding: 15px 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      border-left: 4px solid #005293;
+      transition: transform 0.2s ease;
+    }
+    
+    .time-period:hover {
+      transform: translateX(5px);
+    }
+    
+    .time-period h2 {
+      margin-top: 0;
+      color: #005293;
+    }
+    
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    
+    ol {
+      padding-left: 20px;
+    }
+    
+    a {
+      color: #005293;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+    
+    a:hover {
+      color: #003366;
+      text-decoration: underline;
+    }
+    
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      font-size: 14px;
+      color: #666;
+    }
+    
+    sup {
+      color: #d35400;
+    }
+    
+    .footnote {
+      font-style: italic;
+    }
+  </style>
 </head>
 <body>
-  <h1>Sweden Representation in Foreign Media</h1>
-  <ul>
-    <li>2010-2014</li>
-    <ol>
-      <li><a href="https://daschablume.github.io/swedenrepr/kyivpost2010-2014.html">KyivPost 2010-2014</a></li>
-    </ol>
-    <li>2015-2019</li>
-    <li>2020-2025<sup><a href="#footnote-1">*</a></sup></li>
-  </ul>
-<div style="height: 200px;"></div>
-<p id="footnote-1"><sup>*</sup>The data for 2025 was scraped before March.</p>
-</body>
+  <header>
+    <h1>Sweden Representation in Foreign Media</h1>
+  </header>
   
+  <main>
+    <div class="time-period">
+      <h2>2010-2014</h2>
+      <ol>
+        <li><a href="https://daschablume.github.io/swedenrepr/kyivpost2010-2014.html">KyivPost</a></li>
+        <li><a href="https://daschablume.github.io/swedenrepr/sputnik2010-2014.html">Sputnik</a></li>
+        <li><a href="https://daschablume.github.io/swedenrepr/euractiv2010-2014.html">EurActiv</a></li>
+      </ol>
+    </div>
+    
+    <div class="time-period">
+      <h2>2015-2019</h2>
+        <ol>
+        <li><a href="https://daschablume.github.io/swedenrepr/kyivpost2015-2019.html">KyivPost</a></li>
+        <li><a href="https://daschablume.github.io/swedenrepr/sputnik2015-2019.html">Sputnik</a></li>
+        <li><a href="https://daschablume.github.io/swedenrepr/euractiv2015-2019.html">EurActiv</a></li>
+      </ol>
+    </div>
+    
+    <div class="time-period">
+      <h2>2020-2025<sup><a href="#footnote-1">*</a></sup></h2>
+       <ol>
+        <li><a href="https://daschablume.github.io/swedenrepr/kyivpost2020-2025.html">KyivPost</a></li>
+        <li><a href="https://daschablume.github.io/swedenrepr/sputnik2020-2025.html">Sputnik</a></li>
+        <li><a href="https://daschablume.github.io/swedenrepr/euractiv2020-2025.html">EurActiv</a></li>
+      </ol>
+    </div>
+  </main>
+  
+  <div class="footer">
+    <p id="footnote-1" class="footnote"><sup>*</sup>The data for 2025 was scraped before March.</p>
+  </div>
+</body>
 </html>

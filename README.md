@@ -1,1 +1,1 @@
-# Code for framing extraction about Sweden from data
+# Extraction of narratives about Sweden from media outlets

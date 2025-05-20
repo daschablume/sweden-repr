@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 1600px;
+                 height: 1000px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": "a last partnership", "label": "a last partnership", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "the sweden democrats", "label": "the sweden democrats", "shape": "dot", "value": 2}, {"color": "#97c2fc", "id": "the novel coronavirus", "label": "the novel coronavirus", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "nato membership application", "label": "nato membership application", "shape": "dot", "value": 2}, {"color": "#97c2fc", "id": "oppose", "label": "oppose", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "long oppose", "label": "long oppose", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "nato", "label": "nato", "shape": "dot", "value": 10}, {"color": "#97c2fc", "id": "decade of neutrality", "label": "decade of neutrality", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": " the liberal conservative moderate", "label": " the liberal conservative moderate", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "turkey", "label": "turkey", "shape": "dot", "value": 4}, {"color": "#97c2fc", "id": "nearly 28 500 confirm case and over 3 500 death", "label": "nearly 28 500 confirm case and over 3 500 death", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "all nato member except hungary and turkey", "label": "all nato member except hungary and turkey", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "sweden and finland", "label": "sweden and finland", "shape": "dot", "value": 15}, {"color": "#97c2fc", "id": "1 16 million case with nearly 15 000 fatality", "label": "1 16 million case with nearly 15 000 fatality", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "on ankara s support for its nato bid", "label": "on ankara s support for its nato bid", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "the swedish social democrats", "label": "the swedish social democrats", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "the security situation in europe", "label": "the security situation in europe", "shape": "dot", "value": 2}, {"color": "#97c2fc", "id": "sweden", "label": "sweden", "shape": "dot", "value": 17}, {"color": "#97c2fc", "id": "a joint nato bid", "label": "a joint nato bid", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "1 18 million case of covid", "label": "1 18 million case of covid", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "muslim", "label": "muslim", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "sweden s nato application", "label": "sweden s nato application", "shape": "dot", "value": 4}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "the sweden democrats", "hidden": false, "label": "opposed", "to": "nato", "value": 12}, {"arrows": "to", "from": "the sweden democrats", "hidden": false, "label": "have", "to": "long oppose", "value": 4}, {"arrows": "to", "from": "oppose", "hidden": false, "label": "let", "to": "sweden", "value": 5}, {"arrows": "to", "from": "nato", "hidden": false, "label": "ratify", "to": "sweden and finland", "value": 6}, {"arrows": "to", "from": " the liberal conservative moderate", "hidden": false, "label": "lead", "to": "sweden", "value": 3}, {"arrows": "to", "from": "turkey", "hidden": false, "label": "veto", "to": "sweden s nato application", "value": 20}, {"arrows": "to", "from": "turkey", "hidden": false, "label": "will", "to": "sweden s nato application", "value": 5}, {"arrows": "to", "from": "turkey", "hidden": false, "label": "ratify", "to": "sweden s nato application", "value": 3}, {"arrows": "to", "from": "turkey", "hidden": false, "label": "accuse", "to": "sweden", "value": 7}, {"arrows": "to", "from": "all nato member except hungary and turkey", "hidden": false, "label": "ratify", "to": "sweden and finland", "value": 4}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "join", "to": "nato", "value": 98}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "apply", "to": "nato", "value": 26}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "submit", "to": "nato", "value": 4}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "enter", "to": "nato", "value": 4}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "join", "to": "nato", "value": 4}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "abandon", "to": "decade of neutrality", "value": 22}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "submit", "to": "nato membership application", "value": 15}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "submit", "to": "nato membership application", "value": 4}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "cite", "to": "the security situation in europe", "value": 5}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "file", "to": "a joint nato bid", "value": 3}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "find", "to": "sweden and finland", "value": 3}, {"arrows": "to", "from": "the swedish social democrats", "hidden": false, "label": "dominate", "to": "sweden", "value": 3}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "join", "to": "nato", "value": 37}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "apply", "to": "nato", "value": 5}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "join", "to": "nato", "value": 4}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "not count", "to": "on ankara s support for its nato bid", "value": 18}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "submit", "to": "sweden s nato application", "value": 9}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "tackle", "to": "the novel coronavirus", "value": 6}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "see", "to": "nearly 28 500 confirm case and over 3 500 death", "value": 5}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "see", "to": "1 18 million case of covid", "value": 5}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "form", "to": "a last partnership", "value": 4}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "say", "to": "sweden and finland", "value": 4}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "cite", "to": "the security situation in europe", "value": 4}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "see", "to": "1 16 million case with nearly 15 000 fatality", "value": 3}, {"arrows": "to", "from": "muslim", "hidden": false, "label": "leave", "to": "sweden", "value": 3}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 1600px;
+                 height: 1000px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": "sweden and finland", "label": "sweden and finland", "shape": "dot", "value": 28}, {"color": "#97c2fc", "id": "nato", "label": "nato", "shape": "dot", "value": 14}, {"color": "#97c2fc", "id": "sweden", "label": "sweden", "shape": "dot", "value": 13}, {"color": "#97c2fc", "id": "ukraine", "label": "ukraine", "shape": "dot", "value": 3}, {"color": "#97c2fc", "id": "a pamphlet that", "label": "a pamphlet that", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "decade of military non alignment", "label": "decade of military non alignment", "shape": "dot", "value": 3}, {"color": "#97c2fc", "id": "weapon to ukraine", "label": "weapon to ukraine", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "troop", "label": "troop", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "sweden s annual presidency of the osce", "label": "sweden s annual presidency of the osce", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "a joint bid", "label": "a joint bid", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "the baltic sea", "label": "the baltic sea", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "on kurdish group that ankara call terrorist", "label": "on kurdish group that ankara call terrorist", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "fast track approval", "label": "fast track approval", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "that finland be look to bolster finland s security", "label": "that finland be look to bolster finland s security", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "all the requirement for nato membership", "label": "all the requirement for nato membership", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "terrorist", "label": "terrorist", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "the process", "label": "the process", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "weapon", "label": "weapon", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "no illusion that we will simply put up with it", "label": "no illusion that we will simply put up with it", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "sweden s military focus", "label": "sweden s military focus", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "viktor orban", "label": "viktor orban", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "swede", "label": "swede", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "share burden responsibility and risk with our ally", "label": "share burden responsibility and risk with our ally", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "the kremlin", "label": "the kremlin", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "the move", "label": "the move", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "nato s membership", "label": "nato s membership", "shape": "dot", "value": 1}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "join", "to": "nato", "value": 18}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "seek", "to": "nato", "value": 4}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "join", "to": "nato", "value": 2}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "join", "to": "nato", "value": 2}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "lead", "to": "nato", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "move", "to": "nato", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "seek", "to": "nato", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "join", "to": "nato", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "apply", "to": "nato", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "apply", "to": "nato", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "apply", "to": "nato", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "drop", "to": "decade of military non alignment", "value": 4}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "jettisoned", "to": "decade of military non alignment", "value": 2}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "abandon", "to": "decade of military non alignment", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "provide", "to": "weapon to ukraine", "value": 3}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "launch", "to": "a joint bid", "value": 2}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "border", "to": "the baltic sea", "value": 2}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "win", "to": "fast track approval", "value": 2}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "join", "to": "ukraine", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "look", "to": "that finland be look to bolster finland s security", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "meet", "to": "all the requirement for nato membership", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "oppose", "to": "terrorist", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "launch", "to": "the process", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "provide", "to": "weapon", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "have", "to": "no illusion that we will simply put up with it", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "appease", "to": "the kremlin", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "back", "to": "the move", "value": 1}, {"arrows": "to", "from": "sweden and finland", "hidden": false, "label": "begin", "to": "nato s membership", "value": 1}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "join", "to": "nato", "value": 9}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "decide", "to": "nato", "value": 2}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "want", "to": "nato", "value": 2}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "support", "to": "ukraine", "value": 7}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "issue", "to": "a pamphlet that", "value": 6}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "send", "to": "troop", "value": 3}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "begin", "to": "sweden s annual presidency of the osce", "value": 2}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "crack", "to": "on kurdish group that ankara call terrorist", "value": 2}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "turn", "to": "sweden s military focus", "value": 1}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "upset", "to": "viktor orban", "value": 1}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "urge", "to": "swede", "value": 1}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "will", "to": "share burden responsibility and risk with our ally", "value": 1}, {"arrows": "to", "from": "ukraine", "hidden": false, "label": "thank", "to": "sweden", "value": 2}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

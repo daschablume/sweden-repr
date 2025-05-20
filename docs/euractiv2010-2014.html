@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 1600px;
+                 height: 1000px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": "an early general election", "label": "an early general election", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "the truck", "label": "the truck", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "russian submarine along sweden s coast", "label": "russian submarine along sweden s coast", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "against euro membership", "label": "against euro membership", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "sweden", "label": "sweden", "shape": "dot", "value": 8}, {"color": "#97c2fc", "id": "the french and swedish government", "label": "the french and swedish government", "shape": "dot", "value": 2}, {"color": "#97c2fc", "id": "raise the legal retirement age", "label": "raise the legal retirement age", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "palestine", "label": "palestine", "shape": "dot", "value": 2}, {"color": "#97c2fc", "id": "no long afford sweden s generous welfare state", "label": "no long afford sweden s generous welfare state", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "tax loophole move", "label": "tax loophole move", "shape": "dot", "value": 1}, {"color": "#97c2fc", "id": "the bertelsmann study", "label": "the bertelsmann study", "shape": "dot", "value": 1}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "sweden", "hidden": false, "label": "recognise", "to": "palestine", "value": 8}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "vote", "to": "against euro membership", "value": 7}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "call", "to": "an early general election", "value": 4}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "afford", "to": "no long afford sweden s generous welfare state", "value": 4}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "consider", "to": "raise the legal retirement age", "value": 4}, {"arrows": "to", "from": "sweden", "hidden": false, "label": "suspect", "to": "russian submarine along sweden s coast", "value": 3}, {"arrows": "to", "from": "the french and swedish government", "hidden": false, "label": "back", "to": "the truck", "value": 12}, {"arrows": "to", "from": "the french and swedish government", "hidden": false, "label": "recognise", "to": "palestine", "value": 4}, {"arrows": "to", "from": "tax loophole move", "hidden": false, "label": "block", "to": "sweden", "value": 2}, {"arrows": "to", "from": "the bertelsmann study", "hidden": false, "label": "praise", "to": "sweden", "value": 2}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
